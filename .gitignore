@@ -142,3 +142,8 @@ public
 
 # Mac files
 .DS_Store
+
+# Ignore SQLite database files
+*.db
+*.db-shm
+*.db-wal
