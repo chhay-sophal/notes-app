@@ -11,7 +11,7 @@ namespace Backend.Data
         }
 
         public DbSet<NoteItem> NoteItems { get; set; } = null!;
-        public DbSet<User> Users { get; set; } = null!;
+        public new DbSet<User> Users { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
