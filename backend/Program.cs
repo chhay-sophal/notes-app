@@ -24,6 +24,7 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
     .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<NoteService>();
 
 builder.Services.AddControllers();
 
