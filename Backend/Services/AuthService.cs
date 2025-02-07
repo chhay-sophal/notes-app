@@ -67,7 +67,24 @@ namespace Backend.Services
             await _signInManager.SignOutAsync();
         }
 
-        public string GenerateJwtToken(User user)
+        public async Task<UserDTO> GetLoggedInUser(ClaimsPrincipal claimsPrincipal)
+        {
+            var user = await _userManager.GetUserAsync(claimsPrincipal);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+
+            return new UserDTO
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                FullName = user.FullName,
+                Email = user.Email
+            };
+        }
+
+        private string GenerateJwtToken(User user)
         {
             var claims = new List<Claim>
             {

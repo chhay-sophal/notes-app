@@ -60,10 +60,15 @@ public class AuthController : ControllerBase
         return Ok(new { message = "User logged out successfully" });
     }
 
-    private string GenerateJwtToken(User user)
+    [HttpGet("me")]
+    public async Task<IActionResult> GetLoggedInUser()
     {
-        var tokenString = _authService.GenerateJwtToken(user);
-
-        return tokenString;
+        try {
+            var userInfo = await _authService.GetLoggedInUser(User);
+            return Ok(userInfo);
+        }
+        catch (Exception ex) {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
