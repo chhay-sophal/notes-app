@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using Backend.Services;
 
 namespace Backend.Controllers;
 
@@ -16,87 +17,52 @@ public class AuthController : ControllerBase
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
     private readonly IConfiguration _configuration;
+    private readonly AuthService _authService;
 
-    public AuthController(UserManager<User> userManager, SignInManager<User> signInManager, IConfiguration configuration)
+    public AuthController(UserManager<User> userManager, SignInManager<User> signInManager, IConfiguration configuration, AuthService authService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
+        _authService = authService;
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterDTO model)
     {
-        var user = new User
-        {
-            UserName = model.Email,
-            Email = model.Email,
-            FullName = model.FullName
-        };
+        var result = await _authService.Register(model);
 
-        var result = await _userManager.CreateAsync(user, model.Password);
-
-        if (result.Succeeded)
+        if (!result.Succeeded)
         {
-            return Ok(new { message = "User created successfully" });
+            return BadRequest(result.Errors);
         }
 
-        return BadRequest(new { message = "User creation failed" });
+        return Ok(new { message = "User registered successfully" });
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDTO model)
     {
-        var user = await _userManager.FindByEmailAsync(model.Email);
+        var token = await _authService.Login(model);
 
-        if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
+        if (token == null)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, user.Id)
-                }),
-                Expires = DateTime.UtcNow.AddHours(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
-
-            return Ok(new { token = tokenString });
+            return Unauthorized();
         }
 
-        return Unauthorized();
+        return Ok(new { token });
     }
 
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
-        await _signInManager.SignOutAsync();
+        await  _authService.Logout();
         return Ok(new { message = "User logged out successfully" });
     }
 
     private string GenerateJwtToken(User user)
     {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
-
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(new Claim[]
-            {
-                new Claim(ClaimTypes.Name, user.Id)
-            }),
-            Expires = DateTime.UtcNow.AddHours(1),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-        };
-
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        var tokenString = tokenHandler.WriteToken(token);
+        var tokenString = _authService.GenerateJwtToken(user);
 
         return tokenString;
     }
