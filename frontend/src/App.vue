@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterView } from 'vue-router'
+import NavBar from './components/NavBar.vue'
 </script>
 
 <template>
   <header class="bg-blue-600 text-white p-4 shadow-md">
     <div class="container mx-auto flex justify-between items-center">
       <h1 class="text-2xl font-bold">Notes App</h1>
-      <nav class="space-x-4">
-        <RouterLink to="/" class="hover:underline">Home</RouterLink>
-        <RouterLink to="/about" class="hover:underline">About</RouterLink>
-        <RouterLink to="/login" class="hover:underline">Login</RouterLink>
-        <RouterLink to="/register" class="hover:underline">Register</RouterLink>
-      </nav>
+      <NavBar />
     </div>
   </header>
 
