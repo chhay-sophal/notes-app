@@ -23,14 +23,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import axios from 'axios'
+import axiosInstance from '../services/axiosInstance'
 
 const email = ref('')
 const password = ref('')
 
 const login = async () => {
   try {
-    const response = await axios.post('http://localhost:5389/api/auth/login', {
+    const response = await axiosInstance.post('auth/login', {
       email: email.value,
       password: password.value
     })
