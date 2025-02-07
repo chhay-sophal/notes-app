@@ -16,10 +16,17 @@ namespace Backend.Services
             _context = context;
         }
 
-        public async Task<List<NoteItem>> GetNotes(string userId)
+        public async Task<List<NoteItem>> GetActiveNotes(string userId)
         {
             return await _context.NoteItems
                 .Where(x => x.UserId == userId && !x.IsDeleted)
+                .ToListAsync();
+        }
+
+        public async Task<List<NoteItem>> GetAllNotes(string userId)
+        {
+            return await _context.NoteItems
+                .Where(x => x.UserId == userId)
                 .ToListAsync();
         }
 

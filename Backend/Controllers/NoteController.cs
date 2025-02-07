@@ -27,7 +27,7 @@ namespace Backend.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetNotes()
+        public async Task<IActionResult> GetActiveNotes()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -36,8 +36,35 @@ namespace Backend.Controllers
                 return Unauthorized("Invalid token.");
             }
 
-            var notes = await _noteService.GetNotes(userId);
+            var notes = await _noteService.GetActiveNotes(userId);
             return Ok(notes);
+        }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllNotes()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("Invalid token.");
+            }
+
+            var notes = await _noteService.GetAllNotes(userId);
+            return Ok(notes);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetNoteById(int id)
+        {
+            var note = await _noteService.GetNoteById(id);
+
+            if (note == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(note);
         }
 
 
