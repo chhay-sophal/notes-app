@@ -33,11 +33,13 @@
 import { ref } from 'vue'
 import axiosInstance from '../services/axiosInstance'
 import { RouterLink } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 const fullName = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const router = useRouter()
 
 const register = async () => {
   if (password.value !== confirmPassword.value) {
@@ -52,6 +54,7 @@ const register = async () => {
       password: password.value
     })
     console.log('Registration successful:', response.data)
+    router.push('/login')
   } catch (error) {
     console.error('Registration failed:', error)
   }
