@@ -6,9 +6,7 @@ namespace Backend.Data
 {
     public class AppDbContext : IdentityDbContext<User>
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-        {
-        }
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<NoteItem> NoteItems { get; set; } = null!;
         public new DbSet<User> Users { get; set; } = null!;
