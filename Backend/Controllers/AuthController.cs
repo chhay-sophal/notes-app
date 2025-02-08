@@ -30,27 +30,41 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterDTO model)
     {
-        var result = await _authService.Register(model);
-
-        if (!result.Succeeded)
+        try
         {
-            return BadRequest(result.Errors);
-        }
+            var result = await _authService.Register(model);
 
-        return Ok(new { message = "User registered successfully" });
+            if (!result.Succeeded)
+            {
+                return BadRequest(new { message = string.Join(", ", result.Errors.Select(e => e.Description)) });
+            }
+
+            return Ok(new { message = "User registered successfully" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"{ex.Message}" });
+        }
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDTO model)
     {
-        var token = await _authService.Login(model);
-
-        if (token == null)
+        try
         {
-            return Unauthorized();
-        }
+            var token = await _authService.Login(model);
 
-        return Ok(new { token });
+            if (token == null)
+            {
+                return Unauthorized();
+            }
+
+            return Ok(new { token });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("logout")]

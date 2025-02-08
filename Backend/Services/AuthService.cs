@@ -29,15 +29,23 @@ namespace Backend.Services
         {
             var user = new User
             {
+                FullName = registerDTO.FullName,
                 Email = registerDTO.Email,
                 UserName = registerDTO.Email
             };
+
+            // Check if user already exists
+            var existingUser = await _userManager.FindByEmailAsync(registerDTO.Email);
+            if (existingUser != null)
+            {
+                throw new Exception("Email is already registered.");
+            }
 
             var result = await _userManager.CreateAsync(user, registerDTO.Password);
 
             if (!result.Succeeded)
             {
-                throw new Exception("Failed to create user");
+                throw new Exception($"Failed to create user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             }
 
             return result;
@@ -49,14 +57,14 @@ namespace Backend.Services
 
             if (user == null)
             {
-                throw new Exception("Invalid email or password");
+                throw new Exception("Email not found.");
             }
 
             var result = await _userManager.CheckPasswordAsync(user, loginDTO.Password);
 
             if (!result)
             {
-                throw new Exception("Invalid email or password");
+                throw new Exception("Incorrect password.");
             }
 
             return GenerateJwtToken(user);

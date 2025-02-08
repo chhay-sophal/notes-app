@@ -37,6 +37,9 @@
           </div>
         </div>
 
+        <!-- Error Message -->
+        <p v-if="errorMessage" class="text-red-500 text-sm mb-4">{{ errorMessage }}</p>
+
         <!-- Submit Button -->
         <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
           Login
@@ -59,6 +62,7 @@ import { useRouter } from 'vue-router'
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
+const errorMessage = ref<string | null>(null)  // To store the error message
 const router = useRouter()
 
 // Toggle password visibility
@@ -76,7 +80,13 @@ const login = async () => {
     localStorage.setItem('token', token)
     console.log('Login successful:', response.data)
     router.push('/')
-  } catch (error) {
+  } catch (error: any) {
+    // Handle backend error message
+    if (error.response && error.response.data && error.response.data.message) {
+      errorMessage.value = error.response.data.message  // Set the error message from the backend
+    } else {
+      errorMessage.value = 'An error occurred during login. Please try again later.'
+    }
     console.error('Login failed:', error)
   }
 }
