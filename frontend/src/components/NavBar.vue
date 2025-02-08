@@ -3,7 +3,13 @@
     <RouterLink to="/" class="hover:underline">Home</RouterLink>
     <RouterLink v-if="!isLoggedIn" to="/login" class="hover:underline">Login</RouterLink>
     <RouterLink v-if="!isLoggedIn" to="/register" class="hover:underline">Register</RouterLink>
-    <button v-if="isLoggedIn" @click="logout" class="hover:underline text-red-500">Logout</button>
+    <button 
+      v-if="isLoggedIn" 
+      @click="logout" 
+      class="hover:underline text-red-500 cursor-pointer"
+    >
+      Logout
+    </button>
   </nav>
 </template>
 
