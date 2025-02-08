@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-w-2xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8 min-h-screen flex flex-col">
+  <div class="w-full max-w-2xl mx-auto p-6 shadow-lg rounded-lg mt-8 min-h-screen flex flex-col dark:border dark:border-gray-700">
     <!-- Title Input -->
     <input
       type="text"
@@ -17,6 +17,9 @@
       class="w-full flex-grow mt-4 p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none leading-relaxed overflow-hidden"
       @input="adjustHeight, debouncedSave"
     ></textarea>
+
+    <p class="mt-3">Created at: {{ createdAt }}</p>
+    <p v-if="updatedAt">Edited at: {{ updatedAt }}</p>
   </div>
 </template>
 
@@ -29,6 +32,8 @@ import debounce from "lodash/debounce";
 const title = ref("");
 const content = ref("");
 const contentTextarea = ref(null);
+const createdAt = ref("");
+const updatedAt = ref("");
 const route = useRoute();
 const router = useRouter();
 const saving = ref(false);
@@ -46,9 +51,11 @@ const debouncedSave = debounce(async () => {
   try {
     if (noteId.value) {
       await axiosInstance.put(`note/${noteId.value}`, { title: title.value, content: content.value });
+      updatedAt.value = new Date().toLocaleString();
     } else {
       const response = await axiosInstance.post("note", { title: title.value, content: content.value });
       noteId.value = response.data.id;
+      createdAt.value = new Date().toLocaleString();
     }
     saving.value = false;
   } catch (error) {
@@ -65,6 +72,10 @@ const loadNote = async () => {
       const response = await axiosInstance.get(`note/${id}`);
       title.value = response.data.title;
       content.value = response.data.content;
+      createdAt.value = new Date(response.data.createdAt).toLocaleString();
+      if (response.data.updatedAt) {
+        updatedAt.value = new Date(response.data.updatedAt).toLocaleString();
+      }
       await nextTick(); // Wait for DOM update
       adjustHeight(); // Adjust height after setting content
     } catch (error) {

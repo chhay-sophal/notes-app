@@ -1,7 +1,5 @@
 <template>
   <nav class="flex space-x-6 items-center">
-    <RouterLink to="/" class="hover:text-gray-200 transition">Home</RouterLink>
-    
     <template v-if="!isLoggedIn">
       <RouterLink to="/login" class="hover:text-gray-200 transition">Login</RouterLink>
       <RouterLink to="/register" class="hover:text-gray-200 transition">Register</RouterLink>
