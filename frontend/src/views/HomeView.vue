@@ -16,6 +16,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import axiosInstance from '@/services/axiosInstance';
 
 interface Note {
@@ -26,6 +27,8 @@ interface Note {
 const notes = ref<Note[]>([]);
 const loading = ref(true);
 const error = ref('');
+
+const router = useRouter();
 
 const fetchNotes = async () => {
   try {
@@ -41,6 +44,11 @@ const fetchNotes = async () => {
 };
 
 onMounted(() => {
-  fetchNotes();
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+  } else {
+    fetchNotes();
+  }
 });
 </script>
