@@ -27,6 +27,16 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: () => import('../views/RegisterView.vue'),
+    },
+    {
+      path: '/note',
+      name: 'create-note',
+      component: () => import('../views/NoteEditorView.vue'),
+    },
+    {
+      path: '/note/:id',
+      name: 'edit-note',
+      component: () => import('../views/NoteEditorView.vue'),
     }
   ],
 })

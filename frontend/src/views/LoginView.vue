@@ -3,16 +3,46 @@
     <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
       <h2 class="text-blue-600 text-2xl font-bold mb-6 text-center">Login</h2>
       <form @submit.prevent="login">
+        
+        <!-- Email Input -->
         <div class="mb-4 text-gray-700">
           <label for="email" class="block">Email:</label>
-          <input type="email" v-model="email" class="w-full px-3 py-2 border rounded" required />
+          <input 
+            type="email" 
+            v-model="email" 
+            class="w-full px-3 py-2 border rounded" 
+            required 
+          />
         </div>
-        <div class="mb-6 text-gray-700">
+
+        <!-- Password Input with Toggle -->
+        <div class="mb-6 text-gray-700 relative">
           <label for="password" class="block">Password:</label>
-          <input type="password" v-model="password" class="w-full px-3 py-2 border rounded" required />
+          <div class="relative">
+            <input 
+              :type="showPassword ? 'text' : 'password'"
+              v-model="password" 
+              class="w-full px-3 py-2 border rounded pr-10" 
+              required
+            />
+            <!-- Eye Icon -->
+            <button 
+              type="button"
+              @click="togglePassword" 
+              class="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
+            >
+              <span v-if="showPassword">👁️</span>
+              <span v-else>🙈</span>
+            </button>
+          </div>
         </div>
-        <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">Login</button>
+
+        <!-- Submit Button -->
+        <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+          Login
+        </button>
       </form>
+
       <p class="mt-4 text-center text-gray-600">
         Don't have an account? 
         <RouterLink to="/register" class="text-blue-500 hover:underline">Register</RouterLink>
@@ -22,13 +52,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import axiosInstance from '../services/axiosInstance'
 import { useRouter } from 'vue-router'
 
 const email = ref('')
 const password = ref('')
+const showPassword = ref(false)
 const router = useRouter()
+
+// Toggle password visibility
+const togglePassword = () => {
+  showPassword.value = !showPassword.value
+}
 
 const login = async () => {
   try {
@@ -44,4 +80,12 @@ const login = async () => {
     console.error('Login failed:', error)
   }
 }
+
+// Check if the user is already logged in
+onMounted(() => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    router.push('/')
+  }
+})
 </script>

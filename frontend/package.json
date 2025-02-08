@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.4",
+    "@vueuse/core": "^12.5.0",
     "axios": "^1.7.9",
     "frontend": "file:",
     "tailwindcss": "^4.0.4",

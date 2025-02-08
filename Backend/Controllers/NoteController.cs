@@ -92,7 +92,7 @@ namespace Backend.Controllers
 
             await _noteService.CreateNote(note);
 
-            return Ok(new { message = "Note created successfully" });
+            return Ok(new { message = "Note created successfully", id = note.Id });
         }
 
         [HttpPut("{id}")]
