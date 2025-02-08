@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-100">
+  <div class="flex items-center justify-center min-h-screen">
     <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
       <h2 class="text-blue-600 text-2xl font-bold mb-6 text-center">Register</h2>
       <form @submit.prevent="register">
@@ -57,6 +57,7 @@
               <span v-else>🙈</span>
             </button>
           </div>
+          <p v-if="passwordNotMatched" class="text-red-500 text-sm mt-1">{{ passwordNotMatched }}</p>
         </div>
 
         <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">Register</button>
@@ -113,6 +114,12 @@ const passwordComplexityMessage = computed(() => {
     return 'Password must contain at least one special character.'
   }
   return ''
+})
+
+const passwordNotMatched = computed(() => {
+  if (password.value !== confirmPassword.value) {
+    return 'Passwords do not match'
+  }
 })
 
 const register = async () => {
