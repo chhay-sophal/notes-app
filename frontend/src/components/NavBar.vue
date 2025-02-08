@@ -1,7 +1,6 @@
 <template>
   <nav class="space-x-4">
     <RouterLink to="/" class="hover:underline">Home</RouterLink>
-    <RouterLink to="/about" class="hover:underline">About</RouterLink>
     <RouterLink v-if="!isLoggedIn" to="/login" class="hover:underline">Login</RouterLink>
     <RouterLink v-if="!isLoggedIn" to="/register" class="hover:underline">Register</RouterLink>
     <button v-if="isLoggedIn" @click="logout" class="hover:underline text-red-500">Logout</button>
