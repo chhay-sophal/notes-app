@@ -1,12 +1,16 @@
 <template>
-  <nav class="space-x-4">
-    <RouterLink to="/" class="hover:underline">Home</RouterLink>
-    <RouterLink v-if="!isLoggedIn" to="/login" class="hover:underline">Login</RouterLink>
-    <RouterLink v-if="!isLoggedIn" to="/register" class="hover:underline">Register</RouterLink>
+  <nav class="flex space-x-6 items-center">
+    <RouterLink to="/" class="hover:text-gray-200 transition">Home</RouterLink>
+    
+    <template v-if="!isLoggedIn">
+      <RouterLink to="/login" class="hover:text-gray-200 transition">Login</RouterLink>
+      <RouterLink to="/register" class="hover:text-gray-200 transition">Register</RouterLink>
+    </template>
+
     <button 
-      v-if="isLoggedIn" 
+      v-else 
       @click="logout" 
-      class="hover:underline text-red-500 cursor-pointer"
+      class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
     >
       Logout
     </button>
@@ -15,14 +19,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const isLoggedIn = ref(false)
 
 const checkAuthStatus = () => {
-  const token = localStorage.getItem('token')
-  isLoggedIn.value = !!token
+  isLoggedIn.value = !!localStorage.getItem('token')
 }
 
 const logout = () => {
@@ -33,7 +36,5 @@ const logout = () => {
   }
 }
 
-onMounted(() => {
-  checkAuthStatus()
-})
+onMounted(checkAuthStatus)
 </script>

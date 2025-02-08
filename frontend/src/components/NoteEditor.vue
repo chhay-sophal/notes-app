@@ -1,71 +1,79 @@
 <template>
-  <div class="w-full max-w-2xl mx-auto p-4">
+  <div class="w-full max-w-2xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8 min-h-screen flex flex-col">
     <!-- Title Input -->
     <input
       type="text"
       v-model="title"
-      placeholder="Title"
-      class="w-full text-2xl font-semibold border-b border-gray-300 focus:outline-none focus:border-blue-500 p-2"
+      placeholder="Enter your note title"
+      class="w-full text-3xl font-bold border-b border-gray-300 focus:outline-none focus:border-blue-500 p-3 mb-4"
       @input="debouncedSave"
     />
 
     <!-- Content Textarea -->
     <textarea
+      ref="contentTextarea"
       v-model="content"
-      placeholder="Write your note..."
-      class="w-full h-64 mt-4 p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-      @input="debouncedSave"
+      placeholder="Write your note here..."
+      class="w-full flex-grow mt-4 p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none leading-relaxed overflow-hidden"
+      @input="adjustHeight, debouncedSave"
     ></textarea>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
-import { useDebounceFn } from '@vueuse/core';
-import axiosInstance from '../services/axiosInstance';
+import { ref, onMounted, nextTick } from "vue";
+import axiosInstance from "@/services/axiosInstance";
+import { useRoute, useRouter } from "vue-router";
+import debounce from "lodash/debounce";
 
-const props = defineProps({
-  noteId: String
-});
+const title = ref("");
+const content = ref("");
+const contentTextarea = ref(null);
+const route = useRoute();
+const router = useRouter();
+const saving = ref(false);
+let noteId = ref(null);
 
-const title = ref('');
-const content = ref('');
-const isNewNote = ref(!props.noteId);
-const currentNoteId = ref(props.noteId || '');
-
-const saveNote = async () => {
-  if (!title.value.trim() || !content.value.trim()) return;
-
-  const noteData = { title: title.value, content: content.value };
-
-  try {
-    if (isNewNote.value) {
-      const response = await axiosInstance.post('/note/', noteData);
-      currentNoteId.value = response.data.id;
-      isNewNote.value = false; 
-    } else {
-      await axiosInstance.put(`/note/${currentNoteId.value}`, noteData);
-    }
-  } catch (error) {
-    console.error('Error saving note:', error);
+const adjustHeight = () => {
+  if (contentTextarea.value) {
+    contentTextarea.value.style.height = "auto"; // Reset height
+    contentTextarea.value.style.height = `${contentTextarea.value.scrollHeight}px`; // Set to scroll height
   }
 };
 
-// Auto-save when user stops typing
-const debouncedSave = useDebounceFn(saveNote, 1000);
+const debouncedSave = debounce(async () => {
+  saving.value = true;
+  try {
+    if (noteId.value) {
+      await axiosInstance.put(`note/${noteId.value}`, { title: title.value, content: content.value });
+    } else {
+      const response = await axiosInstance.post("note", { title: title.value, content: content.value });
+      noteId.value = response.data.id;
+    }
+    saving.value = false;
+  } catch (error) {
+    console.error("Failed to save note:", error);
+    saving.value = false;
+  }
+}, 2000); // Save after 2 seconds of inactivity
 
-// Load existing note if noteId is provided
-onMounted(async () => {
-  if (props.noteId) {
+const loadNote = async () => {
+  const id = route.params.id;
+  if (id) {
+    noteId.value = id;
     try {
-      const response = await axiosInstance.get(`note/${props.noteId}`);
+      const response = await axiosInstance.get(`note/${id}`);
       title.value = response.data.title;
       content.value = response.data.content;
-      isNewNote.value = false;
-      currentNoteId.value = props.noteId;
+      await nextTick(); // Wait for DOM update
+      adjustHeight(); // Adjust height after setting content
     } catch (error) {
-      console.error('Error loading note:', error);
+      console.error("Failed to load note:", error);
     }
   }
+};
+
+onMounted(() => {
+  loadNote();
 });
 </script>

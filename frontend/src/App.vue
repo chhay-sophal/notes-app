@@ -13,5 +13,7 @@ const route = useRoute()
     </div>
   </header>
 
-  <RouterView />
+  <main class="container mx-auto p-4">
+    <RouterView />
+  </main>
 </template>
