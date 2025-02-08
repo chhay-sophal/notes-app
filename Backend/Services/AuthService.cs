@@ -1,10 +1,12 @@
 using Backend.DTOs;
 using Backend.Models;
+using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -14,15 +16,15 @@ namespace Backend.Services
 {
     public class AuthService
     {
-        private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
+        private readonly IDbConnection _dbConnection;
         private readonly IConfiguration _configuration;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, IConfiguration configuration)
+        public AuthService(IDbConnection dbConnection, IConfiguration configuration, IPasswordHasher<User> passwordHasher)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
+            _dbConnection = dbConnection;
             _configuration = configuration;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<IdentityResult> Register(RegisterDTO registerDTO)
@@ -34,35 +36,32 @@ namespace Backend.Services
                 UserName = registerDTO.Email
             };
 
-            // Check if user already exists
-            var existingUser = await _userManager.FindByEmailAsync(registerDTO.Email);
+            var existingUser = await _dbConnection.QueryFirstOrDefaultAsync<User>("SELECT * FROM AspNetUsers WHERE Email = @Email", new { Email = registerDTO.Email });
             if (existingUser != null)
             {
-                throw new Exception("Email is already registered.");
+                return IdentityResult.Failed(new IdentityError { Description = "Email is already registered." });
             }
 
-            var result = await _userManager.CreateAsync(user, registerDTO.Password);
+            user.PasswordHash = _passwordHasher.HashPassword(user, registerDTO.Password);
 
-            if (!result.Succeeded)
-            {
-                throw new Exception($"Failed to create user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
-            }
+            var sql = "INSERT INTO AspNetUsers (Id, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, SecurityStamp, ConcurrencyStamp, PhoneNumber, PhoneNumberConfirmed, TwoFactorEnabled, LockoutEnd, LockoutEnabled, AccessFailedCount, FullName) VALUES (@Id, @UserName, @NormalizedUserName, @Email, @NormalizedEmail, @EmailConfirmed, @PasswordHash, @SecurityStamp, @ConcurrencyStamp, @PhoneNumber, @PhoneNumberConfirmed, @TwoFactorEnabled, @LockoutEnd, @LockoutEnabled, @AccessFailedCount, @FullName)";
+            await _dbConnection.ExecuteAsync(sql, user);
 
-            return result;
+            return IdentityResult.Success;
         }
 
         public async Task<string> Login(LoginDTO loginDTO)
         {
-            var user = await _userManager.FindByEmailAsync(loginDTO.Email);
+            var user = await _dbConnection.QueryFirstOrDefaultAsync<User>("SELECT * FROM AspNetUsers WHERE Email = @Email", new { Email = loginDTO.Email });
 
             if (user == null)
             {
                 throw new Exception("Email not found.");
             }
 
-            var result = await _userManager.CheckPasswordAsync(user, loginDTO.Password);
+            var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, loginDTO.Password);
 
-            if (!result)
+            if (result == PasswordVerificationResult.Failed)
             {
                 throw new Exception("Incorrect password.");
             }
@@ -70,14 +69,16 @@ namespace Backend.Services
             return GenerateJwtToken(user);
         }
 
-        public async Task Logout()
+        public Task Logout()
         {
-            await _signInManager.SignOutAsync();
+            return Task.CompletedTask;
         }
 
         public async Task<UserDTO> GetLoggedInUser(ClaimsPrincipal claimsPrincipal)
         {
-            var user = await _userManager.GetUserAsync(claimsPrincipal);
+            var userId = claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _dbConnection.QueryFirstOrDefaultAsync<User>("SELECT * FROM AspNetUsers WHERE Id = @Id", new { Id = userId });
+
             if (user == null)
             {
                 throw new Exception("User not found");

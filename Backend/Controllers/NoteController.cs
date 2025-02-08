@@ -2,7 +2,6 @@ using Backend.DTOs;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
@@ -15,15 +14,15 @@ namespace Backend.Controllers
     [Route("api/[controller]")]
     public class NoteController : ControllerBase
     {
-        private readonly UserManager<User> _userManager;
         private readonly IConfiguration _configuration;
         private readonly NoteService _noteService;
+        private readonly AuthService _authService;
 
-        public NoteController(UserManager<User> userManager, IConfiguration configuration, NoteService noteService)
+        public NoteController(IConfiguration configuration, NoteService noteService, AuthService authService)
         {
-            _userManager = userManager;
             _configuration = configuration;
             _noteService = noteService;
+            _authService = authService;
         }
 
         [HttpGet]
@@ -67,7 +66,6 @@ namespace Backend.Controllers
             return Ok(note);
         }
 
-
         [HttpPost]
         public async Task<IActionResult> CreateNote([FromBody] NoteDTO model)
         {
@@ -76,9 +74,9 @@ namespace Backend.Controllers
                 return BadRequest(new { message = "Invalid note data" });
             }
 
-            var user = await _userManager.GetUserAsync(User);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (user == null)
+            if (string.IsNullOrEmpty(userId))
             {
                 return Unauthorized();
             }
@@ -87,7 +85,7 @@ namespace Backend.Controllers
             {
                 Title = model.Title,
                 Content = model.Content,
-                UserId = user.Id
+                UserId = userId
             };
 
             await _noteService.CreateNote(note);
@@ -102,10 +100,10 @@ namespace Backend.Controllers
             {
                 return BadRequest(new { message = "Invalid note data" });
             }
-            
-            var user = await _userManager.GetUserAsync(User);
 
-            if (user == null)
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
             {
                 return Unauthorized();
             }
@@ -117,7 +115,7 @@ namespace Backend.Controllers
                 return NotFound();
             }
 
-            if (note.UserId != user.Id)
+            if (note.UserId != userId)
             {
                 return Forbid();
             }
@@ -133,11 +131,23 @@ namespace Backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteNote(int id)
         {
-            var user = await _userManager.GetUserAsync(User);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (user == null)
+            if (string.IsNullOrEmpty(userId))
             {
                 return Unauthorized();
+            }
+
+            var note = await _noteService.GetNoteById(id);
+
+            if (note == null)
+            {
+                return NotFound();
+            }
+
+            if (note.UserId != userId)
+            {
+                return Forbid();
             }
 
             await _noteService.DeleteNote(id);

@@ -1,11 +1,6 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Models;
 using Backend.DTOs;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.IdentityModel.Tokens;
 using Backend.Services;
 
 namespace Backend.Controllers;
@@ -14,15 +9,11 @@ namespace Backend.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
     private readonly IConfiguration _configuration;
     private readonly AuthService _authService;
 
-    public AuthController(UserManager<User> userManager, SignInManager<User> signInManager, IConfiguration configuration, AuthService authService)
+    public AuthController(IConfiguration configuration, AuthService authService)
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
         _configuration = configuration;
         _authService = authService;
     }
@@ -70,18 +61,20 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
-        await  _authService.Logout();
+        await _authService.Logout();
         return Ok(new { message = "User logged out successfully" });
     }
 
     [HttpGet("me")]
     public async Task<IActionResult> GetLoggedInUser()
     {
-        try {
+        try
+        {
             var userInfo = await _authService.GetLoggedInUser(User);
             return Ok(userInfo);
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             return BadRequest(new { message = ex.Message });
         }
     }

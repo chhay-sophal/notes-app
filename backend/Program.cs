@@ -1,25 +1,31 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Backend.Models;
-using Backend.Data;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.Text;
+using Microsoft.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+
+// Register IDbConnection
+builder.Services.AddScoped<IDbConnection>(sp =>
+{
+    return new SqlConnection(connectionString);
+});
+
+builder.Services.AddScoped<IUserStore<User>, UserStore>();
+builder.Services.AddScoped<IRoleStore<IdentityRole>, RoleStore>();
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
     options.User.RequireUniqueEmail = true;
 })
-    .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<AuthService>();
