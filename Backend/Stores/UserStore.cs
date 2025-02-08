@@ -5,7 +5,7 @@ using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 
-public class UserStore : IUserStore<User>, IUserPasswordStore<User>
+public class UserStore : IUserStore<User>, IUserPasswordStore<User>, IDisposable
 {
     private readonly IDbConnection _dbConnection;
 
@@ -28,19 +28,19 @@ public class UserStore : IUserStore<User>, IUserPasswordStore<User>
         return IdentityResult.Success;
     }
 
-    public async Task<User> FindByIdAsync(string userId, CancellationToken cancellationToken)
+    public async Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken)
     {
         var sql = "SELECT * FROM AspNetUsers WHERE Id = @Id";
         return await _dbConnection.QuerySingleOrDefaultAsync<User>(sql, new { Id = userId });
     }
 
-    public async Task<User> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
+    public async Task<User?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
     {
         var sql = "SELECT * FROM AspNetUsers WHERE NormalizedUserName = @NormalizedUserName";
         return await _dbConnection.QuerySingleOrDefaultAsync<User>(sql, new { NormalizedUserName = normalizedUserName });
     }
 
-    public Task<string> GetNormalizedUserNameAsync(User user, CancellationToken cancellationToken)
+    public Task<string?> GetNormalizedUserNameAsync(User user, CancellationToken cancellationToken)
     {
         return Task.FromResult(user.NormalizedUserName);
     }
@@ -50,18 +50,18 @@ public class UserStore : IUserStore<User>, IUserPasswordStore<User>
         return Task.FromResult(user.Id);
     }
 
-    public Task<string> GetUserNameAsync(User user, CancellationToken cancellationToken)
+    public Task<string?> GetUserNameAsync(User user, CancellationToken cancellationToken)
     {
         return Task.FromResult(user.UserName);
     }
 
-    public Task SetNormalizedUserNameAsync(User user, string normalizedName, CancellationToken cancellationToken)
+    public Task SetNormalizedUserNameAsync(User user, string? normalizedName, CancellationToken cancellationToken)
     {
         user.NormalizedUserName = normalizedName;
         return Task.CompletedTask;
     }
 
-    public Task SetUserNameAsync(User user, string userName, CancellationToken cancellationToken)
+    public Task SetUserNameAsync(User user, string? userName, CancellationToken cancellationToken)
     {
         user.UserName = userName;
         return Task.CompletedTask;
@@ -74,13 +74,13 @@ public class UserStore : IUserStore<User>, IUserPasswordStore<User>
         return IdentityResult.Success;
     }
 
-    public Task SetPasswordHashAsync(User user, string passwordHash, CancellationToken cancellationToken)
+    public Task SetPasswordHashAsync(User user, string? passwordHash, CancellationToken cancellationToken)
     {
         user.PasswordHash = passwordHash;
         return Task.CompletedTask;
     }
 
-    public Task<string> GetPasswordHashAsync(User user, CancellationToken cancellationToken)
+    public Task<string?> GetPasswordHashAsync(User user, CancellationToken cancellationToken)
     {
         return Task.FromResult(user.PasswordHash);
     }
@@ -88,5 +88,10 @@ public class UserStore : IUserStore<User>, IUserPasswordStore<User>
     public Task<bool> HasPasswordAsync(User user, CancellationToken cancellationToken)
     {
         return Task.FromResult(user.PasswordHash != null);
+    }
+
+    public void Dispose()
+    {
+        _dbConnection.Dispose();
     }
 }

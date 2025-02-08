@@ -4,7 +4,7 @@ using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 
-public class RoleStore : IRoleStore<IdentityRole>
+public class RoleStore : IRoleStore<IdentityRole>, IDisposable
 {
     private readonly IDbConnection _dbConnection;
 
@@ -27,19 +27,19 @@ public class RoleStore : IRoleStore<IdentityRole>
         return IdentityResult.Success;
     }
 
-    public async Task<IdentityRole> FindByIdAsync(string roleId, CancellationToken cancellationToken)
+    public async Task<IdentityRole?> FindByIdAsync(string roleId, CancellationToken cancellationToken)
     {
         var sql = "SELECT * FROM AspNetRoles WHERE Id = @Id";
         return await _dbConnection.QuerySingleOrDefaultAsync<IdentityRole>(sql, new { Id = roleId });
     }
 
-    public async Task<IdentityRole> FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)
+    public async Task<IdentityRole?> FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)
     {
         var sql = "SELECT * FROM AspNetRoles WHERE NormalizedName = @NormalizedName";
         return await _dbConnection.QuerySingleOrDefaultAsync<IdentityRole>(sql, new { NormalizedName = normalizedRoleName });
     }
 
-    public Task<string> GetNormalizedRoleNameAsync(IdentityRole role, CancellationToken cancellationToken)
+    public Task<string?> GetNormalizedRoleNameAsync(IdentityRole role, CancellationToken cancellationToken)
     {
         return Task.FromResult(role.NormalizedName);
     }
@@ -49,18 +49,18 @@ public class RoleStore : IRoleStore<IdentityRole>
         return Task.FromResult(role.Id);
     }
 
-    public Task<string> GetRoleNameAsync(IdentityRole role, CancellationToken cancellationToken)
+    public Task<string?> GetRoleNameAsync(IdentityRole role, CancellationToken cancellationToken)
     {
         return Task.FromResult(role.Name);
     }
 
-    public Task SetNormalizedRoleNameAsync(IdentityRole role, string normalizedName, CancellationToken cancellationToken)
+    public Task SetNormalizedRoleNameAsync(IdentityRole role, string? normalizedName, CancellationToken cancellationToken)
     {
         role.NormalizedName = normalizedName;
         return Task.CompletedTask;
     }
 
-    public Task SetRoleNameAsync(IdentityRole role, string roleName, CancellationToken cancellationToken)
+    public Task SetRoleNameAsync(IdentityRole role, string? roleName, CancellationToken cancellationToken)
     {
         role.Name = roleName;
         return Task.CompletedTask;
@@ -71,5 +71,10 @@ public class RoleStore : IRoleStore<IdentityRole>
         var sql = "UPDATE AspNetRoles SET Name = @Name, NormalizedName = @NormalizedName, ConcurrencyStamp = @ConcurrencyStamp WHERE Id = @Id";
         await _dbConnection.ExecuteAsync(sql, role);
         return IdentityResult.Success;
+    }
+
+    public void Dispose()
+    {
+        _dbConnection.Dispose();
     }
 }
