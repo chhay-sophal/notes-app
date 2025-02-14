@@ -1,10 +1,10 @@
 # NotesApp
 
 ## Overview
-NotesApp is a web application for creating, editing, and managing notes. The backend is built with ASP.NET, and the frontend is developed using Vue.js.
+NotesApp is a web application for creating, editing, and managing notes. The backend is built with ASP.NET Core, and the frontend is developed using Vue.js.
 
 ## Technologies Used
-- **Backend:** ASP.NET 9.0.1
+- **Backend:** ASP.NET Core 9.0.1
 - **Frontend:** Vue.js 3.5.13
 - **Database:** SQL Server 
 
